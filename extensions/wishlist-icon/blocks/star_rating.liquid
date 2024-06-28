@@ -1,0 +1,139 @@
+
+<div class="wishlist-wrapper" x-data="wishlist">
+  <div class="wishlist-icon" @click="addToWishlist()">
+    <span class="icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="{{block.settings.icon_colour}}"
+        fill="none"
+        class="size-6"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+      </svg>
+    </span>
+    {% if block.settings.text %}
+      <span class="wishlist-text">{{ block.settings.text }}</span>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  const appUrl = "https://competition-railway-date-text.trycloudflare.com";
+  const customerId = "{{ customer.id }}";
+  const productId = "{{ product.id }}";
+  const shop = "{{ shop.permanent_domain }}";
+
+  let isWishlisted = [];
+
+
+  let wishlist = {
+    wishlisted: isWishlisted[0],
+    addToWishList: function() {
+      //This function will be envoked on the wishlist button click
+
+      //Chedck customer login and Only work if customer is logged in, if not don't execute further
+      {% unless customer %}
+        alert('Plase login to save wishlsit');
+        return
+      {% endunless %}
+
+
+      //Customer is logged in 
+      wishlistButton.style.pointerEvents = 'none';
+      
+      //Gather the store data, Customer Id and product id to send data to DB
+      const formdata = new FormData();
+      formdata.append("customerId", customerId);
+      formdata.append("productId", productId);
+      formdata.append("shop", shop);
+      formdata.append("action", this.wishlisted ? '_delete' : '_add');
+      if(this.wishlisted){formdata.append("id", isWishlisted[1]);}
+
+      const requestOptions = {
+      method: "POST",
+      body: formdata,
+      redirect: "follow"
+      };
+ 
+      fetch(`${appUrl}/app/wishlist`, requestOptions)
+      .then((response) => response.text())
+      .then((result) => {
+        console.log(result);
+        this.wishlisted = !this.wishlisted;
+        toggleWishlist(icon, wishlistText, wishlist.wishlisted);
+        wishlistButton.style.pointerEvents = 'auto';
+      })
+      .catch((error) => {console.error(error); wishlistButton.style.pointerEvents = 'auto';}); 
+    }
+  }
+  const wishlistButton = document.querySelector('.wishlist-icon');
+  const wishlistText = document.querySelector('.wishlist-text');
+  const icon = document.querySelector(".wishlist-icon .icon svg");
+  wishlistButton.addEventListener('click', async (event) => {
+    isWishlisted = await checkProduct(customerId, productId, shop);
+    wishlist.addToWishList();
+  });
+  
+
+  function toggleWishlist(icon, wishlistText, condition){
+    icon.setAttribute('fill', condition?'{{block.settings.icon_colour}}':'none');
+    wishlistText.textContent = condition?'{{block.settings.afterText}}':"{{ block.settings.text }}";
+  }
+
+
+  //FUnction to check if the product is in wishlist or not
+  async function checkProduct(customerId, productId, shop){
+    const data = await fetch(`${appUrl}/app/wishlist?customerId=${customerId}&productId=${productId}&shop=${shop}`);
+    const jsonData = await data.json();
+    const wishlistData = jsonData.wishlistData.length;
+    if (wishlistData>0){
+      const wishlistItemId = jsonData.wishlistData[0].id;
+      return [wishlistData, wishlistItemId]
+    }
+    else {
+      return [wishlistData]
+    }
+    
+    
+    
+  }
+
+
+  //Run on the page load
+  (async () => {
+    isWishlisted = await checkProduct(customerId, productId, shop);
+    wishlist.wishlisted =  isWishlisted[0]?true:false;
+    toggleWishlist(icon, wishlistText, isWishlisted[0]);
+  })();
+  
+</script>
+
+{% style %}
+  .wishlist-icon svg {
+    width: 24px;
+    height: 24px;
+    color: {{ block.settings.icon_colour }};
+  }
+  .wishlist-text {
+    color: {{ block.settings.text_color }};
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Wishlist Icon",
+  "target": "section",
+  "stylesheet": "style.css",
+  "class": "star-rating-wrapper",
+  "settings": [
+    { "type": "product", "id": "product", "label": "product", "autofill": true },
+    { "type": "text", "id": "text", "label": "Wishlist Label", "default": "Add To Wishlist" },
+    { "type": "text", "id": "afterText", "label": "Wishlist Label After", "info": "wishlist text to be shown after item added to wishlist", "default": "Added To Wishlist" },
+    { "type": "color", "id": "icon_colour", "label": "Star Colour", "default": "#ff0000" },
+    { "type": "header", "content": "Text part" },
+    { "type": "color", "id": "text_color", "label": "Text Color", "default": "#ff0000" }
+  ]
+}
+{% endschema %}

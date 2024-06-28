@@ -1,0 +1,29 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "2c648609ba1249b8c6655da07254f143"
+name = "Wishlist Master"
+handle = "wishlist-master-5"
+application_url = "https://competition-railway-date-text.trycloudflare.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "bytesteststore.myshopify.com"
+include_config_on_deploy = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products"
+
+[auth]
+redirect_urls = [
+  "https://competition-railway-date-text.trycloudflare.com/auth/callback",
+  "https://competition-railway-date-text.trycloudflare.com/auth/shopify/callback",
+  "https://competition-railway-date-text.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-04"
+
+[pos]
+embedded = false

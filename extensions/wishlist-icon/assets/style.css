@@ -1,0 +1,15 @@
+.wishlist-text {
+    line-height: 1;
+    margin-left: 15px;
+  }
+  .wishlist-icon {
+    gap: 10px;
+    width: auto;
+    height: 24px;
+    cursor: pointer;
+  }
+  .wishlist-icon, .wishlist-icon .icon {
+    display: flex;
+    align-items: center;
+    
+  }
